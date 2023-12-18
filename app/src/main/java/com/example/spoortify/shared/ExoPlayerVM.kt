@@ -32,7 +32,7 @@ class ExoPlayerViewModel : ViewModel(){
     val exoPlayer = _exoPlayer.asStateFlow()
 
     // La cancion actual que está sonando
-    private val _actual  = MutableStateFlow()
+    private val _actual  = MutableStateFlow(R.drawable.ic_launcher_foreground)
     val actual = _actual.asStateFlow()
 
     // La duración de la canción
