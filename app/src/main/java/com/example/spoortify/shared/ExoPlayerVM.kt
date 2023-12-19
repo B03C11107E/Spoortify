@@ -31,8 +31,11 @@ class ExoPlayerViewModel : ViewModel(){
     private val _exoPlayer : MutableStateFlow<ExoPlayer?> = MutableStateFlow(null)
     val exoPlayer = _exoPlayer.asStateFlow()
 
+    private val _index  = MutableStateFlow(0)
+    val index = _index.asStateFlow()
+
     // La cancion actual que está sonando
-    private val _actual  = MutableStateFlow(R.drawable.ic_launcher_foreground)
+    private val _actual  = MutableStateFlow(getCancion(_index.value))
     val actual = _actual.asStateFlow()
 
     // La duración de la canción
@@ -59,7 +62,7 @@ class ExoPlayerViewModel : ViewModel(){
 
         // Este listener se mantendrá mientras NO se librere el _exoPlayer
         // Asi que no hace falta crearlo más de una vez.
-        var cancion = MediaItem.fromUri(obtenerRuta(context, actual.value))
+        var cancion = MediaItem.fromUri(obtenerRuta(context, actual.value.cancion))
         _exoPlayer.value!!.setMediaItem(cancion)
         _exoPlayer.value!!.playWhenReady = true
         _exoPlayer.value!!.addListener(object : Player.Listener{
@@ -85,7 +88,7 @@ class ExoPlayerViewModel : ViewModel(){
                 }
                 else if(playbackState == Player.STATE_ENDED){
                     // El Player ha terminado de reproducir el archivo.
-                    CambiarCancion(context)
+                    SiguienteCancion(context)
 
                 }
                 else if(playbackState == Player.STATE_IDLE){
@@ -115,7 +118,7 @@ class ExoPlayerViewModel : ViewModel(){
         }
     }
 
-    fun CambiarCancion(context: Context) {
+    fun SiguienteCancion(context: Context) {
 
         /* TODO: 1 - Cambiar la cancion actual y parar el mediaPlayer
          *  2 - Limpiar al _exoPlayer de los mediaItems que tenga
@@ -125,8 +128,35 @@ class ExoPlayerViewModel : ViewModel(){
         */
         _exoPlayer.value!!.stop()
         _exoPlayer.value!!.clearMediaItems()
-        //_actual.value = R.raw.songtwo
-        _exoPlayer.value!!.setMediaItem(MediaItem.fromUri(obtenerRuta(context, _actual.value)))
+        if(_index.value == 4){
+            _index.value = 0
+        }
+        else{
+            _index.value++
+        }
+        _actual.value = getCancion(_index.value)
+        _exoPlayer.value!!.setMediaItem(MediaItem.fromUri(obtenerRuta(context, _actual.value.cancion)))
+        _exoPlayer.value!!.prepare()
+        _exoPlayer.value!!.playWhenReady = true
+    }
+    fun CancionPrevia(context: Context) {
+
+        /* TODO: 1 - Cambiar la cancion actual y parar el mediaPlayer
+         *  2 - Limpiar al _exoPlayer de los mediaItems que tenga
+         *  3 - Crear mediaItem con la cancion actual
+         *  4 - Establecer dicho mediaItem
+         *  5 - Preparar el reproductor y activar el playWhenReady
+        */
+        _exoPlayer.value!!.stop()
+        _exoPlayer.value!!.clearMediaItems()
+        if(_index.value == 0){
+            _index.value = 4
+        }
+        else{
+            _index.value--
+        }
+        _actual.value = getCancion(_index.value)
+        _exoPlayer.value!!.setMediaItem(MediaItem.fromUri(obtenerRuta(context, _actual.value.cancion)))
         _exoPlayer.value!!.prepare()
         _exoPlayer.value!!.playWhenReady = true
     }

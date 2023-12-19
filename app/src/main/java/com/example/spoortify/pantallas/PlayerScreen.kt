@@ -19,37 +19,54 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.spoortify.R
+import com.example.spoortify.shared.ExoPlayerViewModel
 import com.example.spoortify.shared.ScaffoldVM
 
 @Composable
 fun PlayerScreen(viewModelScaffold: ScaffoldVM = viewModel()){
+
+    val exoPlayerViewModel: ExoPlayerViewModel = viewModel()
+    val contexto = LocalContext.current
+
+    LaunchedEffect(Unit){
+        exoPlayerViewModel.crearExoPlayer(contexto)
+        exoPlayerViewModel.hacerSonarMusica(contexto)
+    }
+
     Column(Modifier.fillMaxSize()) {
         Text("Now playing")
-        Text("Nombre de canción")
+
+        Text(exoPlayerViewModel.actual.value.nombre +" - "+ exoPlayerViewModel.actual.value.album)
+
         Row(horizontalArrangement = Arrangement.Center){
-            Image(painter = painterResource(R.drawable.ojo), contentDescription = "", Modifier.fillMaxWidth())
+            Image(painter = painterResource(exoPlayerViewModel.actual.value.imagen), contentDescription = "", Modifier.fillMaxWidth())
         }
-        Slider(value = 0F, onValueChange = {})
+
+        Slider(value = exoPlayerViewModel.progreso.value.toFloat(), onValueChange = {})
+
         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()){
-            Text(text = "0:00")
-            Text(text = "2:23")
+            Text(text = exoPlayerViewModel.progreso.value.toString())
+            Text(text = exoPlayerViewModel.duracion.value.toString())
         }
+
         Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()){
             IconButton(onClick = { /*TODO*/ }) {
                 Icon(Icons.Filled.Shuffle, contentDescription = "")
             }
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = { exoPlayerViewModel.CancionPrevia(contexto)}) {
                 Icon(Icons.Filled.KeyboardDoubleArrowLeft, contentDescription = "")
             }
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = { exoPlayerViewModel.PausarOSeguirMusica() }) {
                 Icon(Icons.Filled.PlayArrow, contentDescription = "")
             }
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = { exoPlayerViewModel.SiguienteCancion(contexto)}) {
                 Icon(Icons.Filled.KeyboardDoubleArrowRight, contentDescription = "")
             }
             IconButton(onClick = { /*TODO*/ }) {
