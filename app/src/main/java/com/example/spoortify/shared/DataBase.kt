@@ -4,11 +4,11 @@ import com.example.spoortify.R
 import com.example.spoortify.entities.cancion
 
 private val listaCanciones  = listOf(
-    cancion("From The Stars", "Unicorn on Ketamine", R.raw.fromthestars, R.drawable.ojo),
-    cancion("Griddy", "Hits", R.raw.griddy, R.drawable.ojo),
-    cancion("Kalinka", "Unicorn on Ketamine", R.raw.kalinka, R.drawable.ojo),
-    cancion("MBKetamine", "Unicorn on Ketamine", R.raw.mbketamine, R.drawable.ojo),
-    cancion("Not For me", "Unicorn on Ketamine", R.raw.notforme, R.drawable.ojo)
+    cancion("Castle Vein", "UltraKill", R.raw.castlevein, R.drawable.ultrakill),
+    cancion("The cyber grind", "UltraKill", R.raw.thecybergrind, R.drawable.ultrakill),
+    cancion("Altars of Apostasy", "UltraKill", R.raw.altarsofapostasy, R.drawable.ultrakill),
+    cancion("M.O.O.N", "Hotline miami", R.raw.moon, R.drawable.hotlinemiami),
+    cancion("Roller Mobster", "Hotline miami", R.raw.rollermobster, R.drawable.hotlinemiami)
 )
 fun getCancion(index: Int) : cancion {
     return listaCanciones.get(index)

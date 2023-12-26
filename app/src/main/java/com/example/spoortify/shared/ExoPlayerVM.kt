@@ -10,22 +10,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import com.example.spoortify.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 class ExoPlayerViewModel : ViewModel(){
-
-    /* TODO: Pasos a seguir
-     *  1 - Finalizar la función crearExoPlayer
-     *  2 - Finalizar la función hacerSonarMusica, sin el listener
-     *  3 - Finalizar la funion PausarOSeguirMusica
-     *  4 - Finalizar el listener, para gestionar la duracion y el progreso
-     *  5 - Finalizar la funcion cambiarCancion
-     */
 
     // El reproductor de musica, empieza a null
     private val _exoPlayer : MutableStateFlow<ExoPlayer?> = MutableStateFlow(null)
@@ -46,8 +38,16 @@ class ExoPlayerViewModel : ViewModel(){
     private val _progreso = MutableStateFlow(0)
     val progreso = _progreso.asStateFlow()
 
+    private val _random = MutableStateFlow(false)
+    val random = _random.asStateFlow()
+
+    private val _loop = MutableStateFlow(false)
+    val loop = _loop.asStateFlow()
+
+    private val _playList = MutableStateFlow(mutableListOf(0, 1, 2, 3,4))
+    val playList = _playList.asStateFlow()
+
     fun crearExoPlayer(context: Context){
-        /* TODO : Crear el _exoPlayer usando el build(), prepare() y playWhenReady */
         _exoPlayer.value = ExoPlayer.Builder(context).build()
         _exoPlayer.value!!.prepare()
         _exoPlayer.value!!.playWhenReady = true
@@ -55,27 +55,19 @@ class ExoPlayerViewModel : ViewModel(){
 
 
     fun hacerSonarMusica(context: Context){
-        /* TODO: 1 - Crear un mediaItem con la cancion actual
-         *  2 - Establecer dicho mediaItem
-         *  3 - Activar el playWhenReady
-         */
 
         // Este listener se mantendrá mientras NO se librere el _exoPlayer
         // Asi que no hace falta crearlo más de una vez.
         var cancion = MediaItem.fromUri(obtenerRuta(context, actual.value.cancion))
         _exoPlayer.value!!.setMediaItem(cancion)
         _exoPlayer.value!!.playWhenReady = true
+        _exoPlayer.value!!.pause()
         _exoPlayer.value!!.addListener(object : Player.Listener{
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if(playbackState == Player.STATE_READY){
-                    // El Player está preparado para empezar la reproducción.
-                    // Si playWhenReady es true, empezará a sonar la música.
-
-                    /* TODO: Actualizar la duración*/
                     _duracion.value = _exoPlayer.value!!.duration.toInt()
 
                     viewModelScope.launch {
-                        /* TODO: Actualizar el progreso usando currentPosition cada segundo */
                         while (isActive) {
                             _progreso.value = _exoPlayer.value!!.currentPosition.toInt()
                             delay(1000)
@@ -109,7 +101,6 @@ class ExoPlayerViewModel : ViewModel(){
     }
 
     fun PausarOSeguirMusica() {
-        /* TODO: Si el reproductor esta sonando, lo pauso. Si no, lo reproduzco */
         if(_exoPlayer.value!!.isPlaying){
             _exoPlayer.value!!.pause()
         }
@@ -120,45 +111,61 @@ class ExoPlayerViewModel : ViewModel(){
 
     fun SiguienteCancion(context: Context) {
 
-        /* TODO: 1 - Cambiar la cancion actual y parar el mediaPlayer
-         *  2 - Limpiar al _exoPlayer de los mediaItems que tenga
-         *  3 - Crear mediaItem con la cancion actual
-         *  4 - Establecer dicho mediaItem
-         *  5 - Preparar el reproductor y activar el playWhenReady
-        */
         _exoPlayer.value!!.stop()
         _exoPlayer.value!!.clearMediaItems()
         if(_index.value == 4){
-            _index.value = 0
+            if(_loop.value){
+                _index.value = 0
+            }
         }
         else{
             _index.value++
         }
-        _actual.value = getCancion(_index.value)
+        _actual.value = getCancion(_playList.value.indexOf(_index.value))
         _exoPlayer.value!!.setMediaItem(MediaItem.fromUri(obtenerRuta(context, _actual.value.cancion)))
         _exoPlayer.value!!.prepare()
         _exoPlayer.value!!.playWhenReady = true
     }
     fun CancionPrevia(context: Context) {
 
-        /* TODO: 1 - Cambiar la cancion actual y parar el mediaPlayer
-         *  2 - Limpiar al _exoPlayer de los mediaItems que tenga
-         *  3 - Crear mediaItem con la cancion actual
-         *  4 - Establecer dicho mediaItem
-         *  5 - Preparar el reproductor y activar el playWhenReady
-        */
         _exoPlayer.value!!.stop()
         _exoPlayer.value!!.clearMediaItems()
         if(_index.value == 0){
-            _index.value = 4
+            if(_loop.value){
+                _index.value = 4
+            }
         }
         else{
             _index.value--
         }
-        _actual.value = getCancion(_index.value)
+        _actual.value = getCancion(_playList.value.indexOf(_index.value))
         _exoPlayer.value!!.setMediaItem(MediaItem.fromUri(obtenerRuta(context, _actual.value.cancion)))
         _exoPlayer.value!!.prepare()
         _exoPlayer.value!!.playWhenReady = true
+    }
+    fun formatearTiempo(tiempoSegundos: Int): String {
+        val minutos = TimeUnit.SECONDS.toMinutes(tiempoSegundos.toLong())
+        val segundos = tiempoSegundos - TimeUnit.MINUTES.toSeconds(minutos)
+        return String.format("%02d:%02d", minutos, segundos)
+    }
+    fun actualizarProgreso(tiempoMilis: Int){
+        _exoPlayer.value!!.seekTo(tiempoMilis.toLong())
+        _progreso.value = _exoPlayer.value!!.currentPosition.toInt()
+    }
+    fun cambiarRandom(){
+        _random.value = !_random.value
+        if(_random.value){
+            generarPlayListRandom()
+        }
+        else{
+            _playList.value = mutableListOf(0,1,2,3,4)
+        }
+    }
+    fun cambiarLoop(){
+        _loop.value = !_loop.value
+    }
+    fun generarPlayListRandom() {
+        _playList.value.shuffle()
     }
 }
 
